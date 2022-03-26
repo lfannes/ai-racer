@@ -18,19 +18,20 @@ class env(gym.Env):
 
     def __init__(self, screenWidth, screenHeight):
         self.action_space = spaces.Discrete(N_ACTIONS)
-        self.observation_space = spaces.Box(low=0, high=1000, shape=(N_OBSERVATIONS,), dtype=np.uint8) #length of raycasts
+        self.observation_space = spaces.Box(low=0, high=1000, shape=(N_OBSERVATIONS,), dtype=np.float32) #length of raycasts
 
         self.screenWidth = screenWidth
         self.screenHeight = screenHeight
 
         self.car = car.Car(screenWidth / 2, screenHeight / 2)
-        self.circuit = circuit.Circuit()
+        self.circuit = circuit.Circuit(N_OBSERVATIONS)
 
         self.clock = pygame.time.Clock()
         self.previousUpdateTime = time.time()
 
-        self.badReward = -10
-        self.goodReward = 1
+        self.rewardGain = 1
+
+        self.window = None
 
         self.reset()
 
@@ -44,15 +45,17 @@ class env(gym.Env):
     def step(self, action):
         info = "DRIVING LIKE A PRO :)"
         done = False
+        reward = 0
 
-        self.car.update(action)
+        self.car.update(action, time.time() - self.previousUpdateTime)
+        self.previousUpdateTime = time.time()
 
-        if self.circuit.collides(self.car):
+        if self.circuit.collidesMask(self.car):
             print("COLLIDED WITH EDGE OF TRACK")
             info = "COLLISION"
-            reward = self.badReward
+            done = True
         else:
-            reward = self.goodReward
+            reward = self.rewardGain
 
         observation = self.circuit.getObservation(self.car)
 
@@ -61,7 +64,7 @@ class env(gym.Env):
     def reset(self):
         self.window.fill((255, 255, 255))
         self.car = car.Car(self.screenWidth / 2, self.screenHeight / 2)
-        return self.circuit.getObservation(self.car) #returning observation
+        return self.circuit.getObservation(self.car)
 
     def render(self, mode="human"):
         if mode == "human":
@@ -71,4 +74,4 @@ class env(gym.Env):
             pygame.display.update()
 
     def close(self):
-        pass
+        pygame.quit()
