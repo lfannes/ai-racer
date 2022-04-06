@@ -15,32 +15,33 @@ class Circuit(Sprite):
 		pygame.mask.Mask.invert(self.mask)
 		self.rect = self.image.get_rect()
 		self.angleBetweenRays = 360 / numberRaycasts
-		self.numRaycasys = numberRaycasts
+		self.numRaycasts = numberRaycasts
 		self.point = Point()
 		self.sizeOfPoint = 250
 		self.raycastVel = 5
-		self.lastObs = np.zeros((self.numRaycasys, 2))
+		self.lastObs = np.zeros((self.numRaycasts, 2))
 		self.lastCar = None
 
-	def collidesMask(self, obj):
+	def isOffTrack(self, obj):
 		collision = pygame.sprite.collide_mask(self, obj)
-		if not collision:
-			return False
-		else:
+		if collision:
 			return True
+		else:
+			return False
 
 	def getObservation(self, car):
-		observationPoints = np.zeros((self.numRaycasys, 2))
-		observations = np.zeros(self.numRaycasys)
+		observationPoints = np.zeros((self.numRaycasts, 2))
+		observations = np.zeros(self.numRaycasts)
 		carAngle = car.rigidbody.getRotation()
 		currentAngle = 0
 		pointPos = (car.rigidbody.getPositions()[0] + (car.width/2), car.rigidbody.getPositions()[1] + (car.height/2))
 		self.point = Point()
 		self.point.move(pointPos[0], pointPos[1])
-		directionVector = physics.Vector2(math.sin(math.radians(carAngle - currentAngle)), -math.cos(math.radians(carAngle - currentAngle)))
-		for i in range(self.numRaycasys):
+		directionVector = physics.Vector2(math.cos(math.radians(carAngle + currentAngle)),
+										  math.sin(math.radians(carAngle + currentAngle)))
+		for i in range(self.numRaycasts):
 			#move point until it hits the edge of the track
-			while self.collidesMask(self.point):
+			while not self.isOffTrack(self.point):
 				pointPos = (pointPos[0] + directionVector.getMovementPos(self.raycastVel).get()[0], pointPos[1] + directionVector.getMovementPos(self.raycastVel).get()[1])
 				self.point.move(pointPos[0], pointPos[1])
 
@@ -54,7 +55,7 @@ class Circuit(Sprite):
 			self.point = Point()
 			pointPos = (car.rigidbody.getPositions()[0] + (car.width/2), car.rigidbody.getPositions()[1] + (car.height/2))
 			self.point.move(pointPos[0], pointPos[1])
-			directionVector = physics.Vector2(math.sin(math.radians(carAngle - currentAngle)), -math.cos(math.radians(carAngle - currentAngle)))
+			directionVector = physics.Vector2(math.cos(math.radians(carAngle + currentAngle)), math.sin(math.radians(carAngle + currentAngle)))
 
 		self.lastObs = observationPoints
 		self.lastCar = car
@@ -67,19 +68,30 @@ class Circuit(Sprite):
 			return
 
 		carCenterPos = (self.lastCar.rigidbody.getPositions()[0] + (self.lastCar.width / 2), self.lastCar.rigidbody.getPositions()[1] + (self.lastCar.height / 2))
-		for i in range(self.numRaycasys):
+		for i in range(self.numRaycasts):
 			pygame.draw.line(window, (0, 0, 0), carCenterPos, self.lastObs[i])
 
 class Point(Sprite):
-	def __init__(self):
+	def __init__(self, x=0, y=0, size=(0, 0)):
 		self.image = pointImage
-		self.mask = pygame.mask.from_surface(self.image)
+		self.x = x
+		self.y = y
+		if size != (0, 0):
+			self.image = pygame.transform.scale(self.image, size)
 		self.rect = self.image.get_rect()
-		self.x = 0
-		self.y = 0
+		self.rect = pygame.Rect.move(self.rect, self.x, self.y)
+		self.mask = pygame.mask.from_surface(self.image)
+
+	def __repr__(self):
+		return f"({self.x}, {self.y})"
 
 	def move(self, x, y):
 		self.x = int(x)
 		self.y = int(y)
-		self.rect = self.image.get_rect(center=self.image.get_rect(topleft=(self.x, self.y)).center)
+		self.rect = self.image.get_rect()
+		self.rect = pygame.Rect.move(self.rect, self.x, self.y)
 		self.mask = pygame.mask.from_surface(self.image)
+
+	def collide(self, obj, range):
+		collision = pygame.sprite.collide_rect(self, obj)
+		return collision

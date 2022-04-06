@@ -1,7 +1,6 @@
 import math
 import numpy as np
 
-
 class Vector2:
   def __init__(self, x, y):
     self.x = x

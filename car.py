@@ -16,18 +16,19 @@ class Car(Sprite):
     self.image = pygame.transform.flip(pygame.transform.scale(carImage, (self.width, self.height)), False, True)
     self.mask = pygame.mask.from_surface(self.image)
     self.rect = self.image.get_rect()
+    self.rotatedImage = None
 
 
   def draw(self, window):
-    rotatedImage = pygame.transform.rotate(self.image, -self.rigidbody.getRotation())
-    self.rect = rotatedImage.get_rect(center=self.image.get_rect(topleft=(self.rigidbody.x, self.rigidbody.y)).center)
-    self.mask = pygame.mask.from_surface(rotatedImage)
-    window.blit(rotatedImage, self.rect)
+    window.blit(self.rotatedImage, self.rect)
 
     olist = self.mask.outline()
     pygame.draw.lines(window, (200, 150, 150), 1, olist)
 
   def update(self, action, dt):
+    self.rotatedImage = pygame.transform.rotate(self.image, -self.rigidbody.getRotation())
+    self.rect = self.rotatedImage.get_rect(center=self.image.get_rect(topleft=(self.rigidbody.x, self.rigidbody.y)).center)
+    self.mask = pygame.mask.from_surface(self.rotatedImage)
     #if (action == 0):
     self.rigidbody.movePositions(dt)
    # else:
