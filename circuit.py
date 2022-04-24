@@ -4,8 +4,11 @@ from pygame.sprite import Sprite
 import math
 import physics
 
+pygame.init()
+
 circuitImage = pygame.image.load('resources/circuit.png')
 pointImage = pygame.image.load('resources/point.png')
+defaultFont = pygame.font.Font('resources/font.otf', 32)
 
 class Circuit(Sprite):
 	def __init__(self, numberRaycasts):
@@ -21,6 +24,8 @@ class Circuit(Sprite):
 		self.raycastVel = 5
 		self.lastObs = np.zeros((self.numRaycasts, 2))
 		self.lastCar = None
+		self.text = defaultFont.render('', True, (255, 0, 0), (0, 255, 0))
+		self.textRect = self.text.get_rect()
 
 	def isOffTrack(self, obj):
 		collision = pygame.sprite.collide_mask(self, obj)
@@ -48,7 +53,7 @@ class Circuit(Sprite):
 			#save raycast in observation
 			observationPoints[i][0] = self.point.x
 			observationPoints[i][1] = self.point.y
-			observations[i] = math.sqrt((pointPos[0] - self.point.x)**2 + (pointPos[1] - self.point.y)**2)
+			observations[i] = math.sqrt((car.rigidbody.getPositions()[0] - self.point.x)**2 + (car.rigidbody.getPositions()[0] - self.point.y)**2)
 
 			#reset all the variable
 			currentAngle += self.angleBetweenRays
@@ -70,6 +75,7 @@ class Circuit(Sprite):
 		carCenterPos = (self.lastCar.rigidbody.getPositions()[0] + (self.lastCar.width / 2), self.lastCar.rigidbody.getPositions()[1] + (self.lastCar.height / 2))
 		for i in range(self.numRaycasts):
 			pygame.draw.line(window, (0, 0, 0), carCenterPos, self.lastObs[i])
+			pygame.draw.circle(window, (255/(i+1), 255/(i+1), 255/(i+1)), self.lastObs[i], 5)
 
 class Point(Sprite):
 	def __init__(self, x=0, y=0, size=(0, 0)):

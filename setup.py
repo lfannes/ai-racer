@@ -9,9 +9,9 @@ env = env.RacerEnv()
 rewards = Reward(env.circuit)
 
 def draw():
-  env.render("human")
+  env.render()
   rewards.draw(env.window)
-  time.sleep(1/10)
+  time.sleep(1/30)
   pygame.display.update()
 
 

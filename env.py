@@ -1,3 +1,4 @@
+import random
 import pygame
 import time
 import car
@@ -8,13 +9,13 @@ import numpy as np
 N_ACTIONS = 2
 N_OBSERVATIONS = 8
 
-FPS = 10
+FPS = 30
 
 pygame.init()
 
 class RacerEnv():
     def __init__(self):
-        self.step_limit = 300
+        self.step_limit = 300*3
         self.steps = 0
         self.sleep = 0
 
@@ -31,9 +32,9 @@ class RacerEnv():
         self.clock = pygame.time.Clock()
         self.previousUpdateTime = time.time()
 
-        self.stepCost = -1
-        self.minReward = 60
-        self.maxReward = 300
+        self.stepCost = 1
+        self.minReward = 500
+        self.maxReward = 1500
 
         self.window = None
         self.humanAction = ""
@@ -69,7 +70,7 @@ class RacerEnv():
 
     def reset(self):
         self.steps = 0
-        self.car = car.Car(1178, 756)
+        self.car = car.Car(1178 + random.uniform(-10.2, 10.2), 756 + random.uniform(-12., 12.))
         self.rewards.reset()
         return self.circuit.getObservation(self.car)
 
