@@ -28,7 +28,7 @@ class Vector2:
   def getDistance(self, pos):
     return np.sqrt((self.x - pos.x)**2 + (self.y - pos.y)**2)
 
-  def getAngle(self):
+  def getAngle(self): #get angle in deg
     return (math.atan(self.y/self.x) / math.pi) * 180
 
   def getMovementPos(self, vel):
@@ -38,12 +38,12 @@ class Vector2:
     return movement
 
 class Rigidbody:
-  def __init__(self, x, y, vel):
+  def __init__(self, x, y, vel, angle=0):
     self.x = x
     self.y = y
     self.topLeft = (10, 10) #for edge collision
     self.lowerRight = (1950, 950) #for edge collision
-    self.movement = Vector2(1, 1) #movement vector that point forward relative to the car
+    self.movement = Vector2(np.cos((angle / 180) * math.pi), np.sin((angle / 180) * math.pi)) #movement vector that point forward relative to the car
     self.movement.normalize()
     self.vel = vel
     self.currentVel = 0

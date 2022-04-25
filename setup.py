@@ -6,19 +6,19 @@ import time
 pygame.init()
 
 env = env.RacerEnv()
-rewards = Reward(env.circuit)
+obs = env.reset()
 
 def draw():
   env.render()
-  rewards.draw(env.window)
-  time.sleep(1/30)
   pygame.display.update()
 
 
 
 def update():
-  next_observation, reward, done, info = env.step(env.car.getAction())
-  rewards.getReward(500, 1800, -1, env.car)
+  action = env.car.getAction()
+  print(action)
+  next_observation, reward, done, info = env.step(action)
+  #print(info)
 
 running = True
 while running:

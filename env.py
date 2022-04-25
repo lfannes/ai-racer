@@ -5,11 +5,12 @@ import car
 import circuit
 import reward
 import numpy as np
+import math
 
 N_ACTIONS = 2
-N_OBSERVATIONS = 8
+N_OBSERVATIONS = 9 # 8 raycast, 1 car angle
 
-FPS = 30
+FPS = 10
 
 pygame.init()
 
@@ -25,16 +26,19 @@ class RacerEnv():
         self.screenWidth = 1920
         self.screenHeight = 1080
 
-        self.car = car.Car(1178, 756)
+        self.car = None
         self.circuit = circuit.Circuit(N_OBSERVATIONS)
         self.rewards = reward.Reward(self.circuit)
+        self.trackPositions = []
 
         self.clock = pygame.time.Clock()
         self.previousUpdateTime = time.time()
 
-        self.stepCost = 1
-        self.minReward = 500
-        self.maxReward = 1500
+        self.stepCost = -1
+        self.lineReward = 150
+        self.linesCrossed = 0
+
+        self.startPlace = 0
 
         self.window = None
         self.humanAction = ""
@@ -43,35 +47,53 @@ class RacerEnv():
         self.reset()
 
     def setupEnv(self):
-        #self.window = pygame.display.set_mode((self.screenWidth, self.screenHeight))
         self.window = pygame.display.set_mode((self.screenWidth, self.screenHeight))
         pygame.display.set_caption("AI Racer")
         pygame.display.set_icon(pygame.image.load("resources/icon.png"))
 
     def step(self, action):
-        info = "DRIVING LIKE A PRO :)"
+        info = str(self.car.rigidbody.getPositions())
         self.steps += 1
         done = False if self.steps < self.step_limit else True
         self.car.update(action, 1/FPS)
-        reward = self.rewards.getReward(self.minReward, self.maxReward, self.stepCost, self.car)
-        if reward == self.maxReward:
-            print(f"steps: {self.steps}")
+
+        if self.rewards.getReward(self.car):
+            reward = self.lineReward
+            self.linesCrossed += 1
+        else:
+            reward = self.stepCost
 
         if self.circuit.isOffTrack(self.car):
             done = True
 
-
-        observation = self.circuit.getObservation(self.car)
+        observation = self.circuit.getObservation(self.car) / math.sqrt((self.screenWidth**2) - (self.screenHeight**2))
+        np.append(observation, (self.car.rigidbody.movement.getAngle() / 180) * math.pi)
 
         return observation, reward, done, info
 
-    def getRandomAction(self):
-        return np.random.randint(0, 2) #0: LEFT, 1:RIGHT
+    def getAction(self, weights=[0.5, 0.5]): #weights removes the uniform chance of the action, weights undefined means uniform random
+        weights = [weights[0], 1-weights[0]] #to avoid errors
+        action = random.choices([0, 1], weights=weights)
+        return action[0] #0: LEFT, 1:RIGHT
 
-    def reset(self):
+    def reset(self, changePos=False):
         self.steps = 0
-        self.car = car.Car(1178 + random.uniform(-10.2, 10.2), 756 + random.uniform(-12., 12.))
+        self.linesCrossed = 0
+        self.trackPositions = [] #points were car can start
+        for i in range(len(self.rewards.rewardLines)):
+            x = (self.rewards.rewardLines[i].positions[0][0] + self.rewards.rewardLines[i].positions[1][0]) / 2
+            y = (self.rewards.rewardLines[i].positions[0][1] + self.rewards.rewardLines[i].positions[1][1]) / 2
+            angle = self.rewards.rewardLines[i].directionVector.getAngle() + 90
+            lineNumber = i + 1 if i + 1 < self.rewards.numRaycasts else 0
+            self.trackPositions.append([x, y, angle, lineNumber])
+
+        if changePos:
+            self.startPlace = random.randint(0, self.rewards.numRaycasts - 1)
+            self.startPlace = 8 if self.startPlace == 9 else self.startPlace
+
+        self.car = car.Car(self.trackPositions[self.startPlace][0] + random.uniform(-5., 5.), self.trackPositions[self.startPlace][1] + random.uniform(-5., 5.), self.trackPositions[self.startPlace][2])
         self.rewards.reset()
+        self.rewards.rewardIndex = self.trackPositions[self.startPlace][3]
         return self.circuit.getObservation(self.car)
 
     def render(self, mode="human"):

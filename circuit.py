@@ -8,7 +8,6 @@ pygame.init()
 
 circuitImage = pygame.image.load('resources/circuit.png')
 pointImage = pygame.image.load('resources/point.png')
-defaultFont = pygame.font.Font('resources/font.otf', 32)
 
 class Circuit(Sprite):
 	def __init__(self, numberRaycasts):
@@ -24,8 +23,6 @@ class Circuit(Sprite):
 		self.raycastVel = 5
 		self.lastObs = np.zeros((self.numRaycasts, 2))
 		self.lastCar = None
-		self.text = defaultFont.render('', True, (255, 0, 0), (0, 255, 0))
-		self.textRect = self.text.get_rect()
 
 	def isOffTrack(self, obj):
 		collision = pygame.sprite.collide_mask(self, obj)

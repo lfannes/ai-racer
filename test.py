@@ -10,7 +10,7 @@ pygame.init()
 env = env.RacerEnv()
 rewards = Reward(env.circuit)
 
-model = load_model("cartpole-dqn-3000.h5")
+model = load_model("cartpole-dqn-final2.h5")
 state = env.reset()
 state = np.reshape(state, [1, env.n_observations])
 

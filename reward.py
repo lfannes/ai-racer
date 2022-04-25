@@ -19,11 +19,11 @@ class Reward():
         self.startPos = (circuit.rect.x + circuit.rect.width/2, circuit.rect.y + circuit.rect.height/2)
         self.setup(self.startPos[0], self.startPos[1], circuit)
 
-    def getReward(self, minReward, maxReward, noReward, car):
+    def getReward(self, car):
         if self.rewardLines[self.rewardIndex].collide(car):
-            self.rewardIndex += 1 if self.rewardIndex < self.numRaycasts - 1 else -self.numRaycasts
-            return minReward + ((maxReward - minReward) / self.numRaycasts) * (self.rewardIndex + 1)
-        return noReward
+            self.rewardIndex = self.rewardIndex + 1 if self.rewardIndex + 1 < self.numRaycasts else 0 
+            return True
+        return False
 
     def reset(self):
         self.rewardIndex = 0
@@ -52,7 +52,7 @@ class Reward():
         anglePerStep = 360.0 / self.numRaycasts
         angle = 360.0
         for i in range(self.numRaycasts):
-            self.rewardLines.append(RewardLine(self.TrackEdgePos((x, y), circuit, angle), self.pointsPerLine, angle, self.triggerDistance))
+            self.rewardLines.append(RewardLine(self.TrackEdgePos((x, y), circuit, angle), self.pointsPerLine, angle, self.triggerDistance, i))
             angle -= anglePerStep
 
     def draw(self, window):
@@ -60,13 +60,14 @@ class Reward():
 
 
 class RewardLine():
-    def __init__(self, positions, pointPerLine, angle, triggerDistance):
+    def __init__(self, positions, pointPerLine, angle, triggerDistance, lineNumber):
         self.positions = positions
         self.pointPerLine = pointPerLine
         self.directionVector = Vector2(math.cos(math.radians(angle)), math.sin(math.radians(angle)))
         self.directionVector.normalize()
         self.points = []
         self.triggerDistance = triggerDistance
+        self.lineNumber = lineNumber
         self.setup()
 
     def setup(self):

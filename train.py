@@ -50,14 +50,14 @@ class DQNAgent:
         self.mean_point_history = []
 
         self.gamma = 0.98  # discount rate
-        self.epsilon = 0.25  # exploration rate
+        self.epsilon = 1 # exploration rate
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.999
         self.batch_size = 2000
 
         # create main model
-        #self.model = OurModel(input_shape=(self.state_size,), action_space=self.action_size)
-        self.model = load_model("cartpole-dqn-4000.h5")
+        self.model = OurModel(input_shape=(self.state_size,), action_space=self.action_size)
+        #self.model = load_model("cartpole-dqn-4000.h5")
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))

@@ -5,14 +5,14 @@ from pygame.sprite import Sprite
 carImage = pygame.image.load("resources/car.png")
 
 class Car(Sprite):
-  def __init__(self, x, y):
+  def __init__(self, x, y, angle):
     super().__init__()
     self.vel = 120
-    self.rigidbody = Rigidbody(x, y, self.vel)
-    self.rigidbody.setRotation(-16)
+    self.rigidbody = Rigidbody(x, y, self.vel, angle)
+    self.rigidbody.setRotation(angle)
     self.width = 100
     self.height = 50
-    self.maxRotation = 4
+    self.maxRotation = 18
     self.image = pygame.transform.flip(pygame.transform.scale(carImage, (self.width, self.height)), False, True)
     self.mask = pygame.mask.from_surface(self.image)
     self.rect = self.image.get_rect()
@@ -20,15 +20,19 @@ class Car(Sprite):
 
 
   def draw(self, window):
+    self.updateImage()
     window.blit(self.rotatedImage, self.rect)
 
     olist = self.mask.outline()
     pygame.draw.lines(window, (200, 150, 150), 1, olist)
 
-  def update(self, action, dt):
+  def updateImage(self):
     self.rotatedImage = pygame.transform.rotate(self.image, -self.rigidbody.getRotation())
     self.rect = self.rotatedImage.get_rect(center=self.image.get_rect(topleft=(self.rigidbody.x, self.rigidbody.y)).center)
     self.mask = pygame.mask.from_surface(self.rotatedImage)
+
+  def update(self, action, dt):
+    self.updateImage()
     #if (action == 0):
     self.rigidbody.movePositions(dt)
    # else:
