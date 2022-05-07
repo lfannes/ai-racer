@@ -5,11 +5,11 @@ from pygame.sprite import Sprite
 carImage = pygame.image.load("resources/car.png")
 
 class Car(Sprite):
-  def __init__(self, x, y, angle):
+  def __init__(self, car_position):
     super().__init__()
     self.vel = 120
-    self.rigidbody = Rigidbody(x, y, self.vel, angle)
-    self.rigidbody.setRotation(angle)
+    self.rigidbody = Rigidbody(car_position.x, car_position.y, self.vel, car_position.angle)
+    self.rigidbody.setRotation(car_position.angle)
     self.width = 100
     self.height = 50
     self.maxRotation = 18
@@ -33,23 +33,25 @@ class Car(Sprite):
 
   def update(self, action, dt):
     self.updateImage()
-    #if (action == 0):
     self.rigidbody.movePositions(dt)
-   # else:
-     # self.rigidbody.stop()
 
-    if (action == 1):
+    if (action == 0):
       self.rigidbody.rotate(-self.maxRotation)
-    elif (action == 2):
+    elif (action == 1):
       self.rigidbody.rotate(self.maxRotation)
-      
+
   def getAction(self):
     # if (pygame.key.get_pressed()[pygame.K_UP] or pygame.key.get_pressed()[pygame.K_w]):
     #   return 0
 
     if (pygame.key.get_pressed()[pygame.K_LEFT] or pygame.key.get_pressed()[pygame.K_a]):
-      return 1
+      return 0
     elif (pygame.key.get_pressed()[pygame.K_RIGHT] or pygame.key.get_pressed()[pygame.K_d]):
-      return 2
+      return 1
       
-    
+class StartPositions:
+  def __init__(self, x, y, angle, lineNumber):
+    self.x = x
+    self.y = y
+    self.angle = angle
+    self.lineNumber = lineNumber

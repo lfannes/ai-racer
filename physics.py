@@ -29,7 +29,7 @@ class Vector2:
     return np.sqrt((self.x - pos.x)**2 + (self.y - pos.y)**2)
 
   def getAngle(self): #get angle in deg
-    return (math.atan(self.y/self.x) / math.pi) * 180
+    return (math.atan2(self.y, self.x) / math.pi) * 180
 
   def getMovementPos(self, vel):
     movement = Vector2(self.x, self.y)

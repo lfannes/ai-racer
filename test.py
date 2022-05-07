@@ -4,37 +4,46 @@ from reward import Reward
 import time
 from keras.models import Model, load_model
 import numpy as np
+import random
 
 pygame.init()
 
 env = env.RacerEnv()
 rewards = Reward(env.circuit)
 
-model = load_model("cartpole-dqn-final2.h5")
-state = env.reset()
-state = np.reshape(state, [1, env.n_observations])
+model = load_model("cartpole-dqn-1200-7.h5")
+observation = env.reset()
+observation = np.reshape(observation, [1, env.n_observations])
 
 done = False
 
-def action():
+
+def get_action(state):
     if np.random.random() <= 0.02:
-        return env.getRandomAction()
+        return random.choice([0, 1, 2])
     else:
-        return np.argmax(model(state, training=False).numpy())
+        act = np.argmax(model(state, training=False).numpy())
+        print(act if act == 2 else "")
+        return act
+
+def getAction(weights=[0.5, 0.5]): #weights removes the uniform chance of the action, weights undefined means uniform random
+    weights = [weights[0], 1-weights[0]] #to avoid errors
+    action = random.choices([0, 1], weights=weights)
+    return action[0] #0: LEFT, 1:RIGHT # 0: LEFT, 1:RIGHT
+
 
 def draw():
-  env.render()
-  rewards.draw(env.window)
-  pygame.display.update()
+    print("render")
+    env.render()
+  #pygame.display.update()
 
 def update():
-    global state, done
-    next_state, reward, done, info = env.step(action())
-    state = np.reshape(next_state, [1, env.n_observations])
+    global observation, done
+    next_observation, reward, done, info = env.step(get_action(observation))
+    observation = np.reshape(next_observation, [1, env.n_observations])
     if done:
         pygame.quit()
-    rewards.getReward(500, 1800, -1, env.car)
-
+i=0
 running = True
 while running:
   for event in pygame.event.get():
@@ -43,3 +52,4 @@ while running:
 
   draw()
   update()
+  i += 1

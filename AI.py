@@ -34,13 +34,12 @@ print(model.summary())
 
 
 def epsilon_greedy_action_selection(model, epsilon, observation):
-    with tf.device('/cpu:0'):
-        if np.random.random() > epsilon: #let the model predict the best action
-            prediction = model.predict(np.array([observation, ]))
-            action = np.argmax(prediction)
-        else: #explore more of the environment
-            action = env.getRandomAction()
-        return action
+    if np.random.random() > epsilon: #let the model predict the best action
+        prediction = model.predict(np.array([observation, ]))
+        action = np.argmax(prediction)
+    else: #explore more of the environment
+        action = env.getRandomAction()
+    return action
 
 replay_buffer = deque(maxlen=20000)
 update_target_model = 10 #update the target model after ... epochs

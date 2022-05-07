@@ -20,7 +20,7 @@ class Circuit(Sprite):
 		self.numRaycasts = numberRaycasts
 		self.point = Point()
 		self.sizeOfPoint = 250
-		self.raycastVel = 5
+		self.raycastVel = 3
 		self.lastObs = np.zeros((self.numRaycasts, 2))
 		self.lastCar = None
 
@@ -39,8 +39,7 @@ class Circuit(Sprite):
 		pointPos = (car.rigidbody.getPositions()[0] + (car.width/2), car.rigidbody.getPositions()[1] + (car.height/2))
 		self.point = Point()
 		self.point.move(pointPos[0], pointPos[1])
-		directionVector = physics.Vector2(math.cos(math.radians(carAngle + currentAngle)),
-										  math.sin(math.radians(carAngle + currentAngle)))
+		directionVector = physics.Vector2(math.cos(math.radians(carAngle + currentAngle)), math.sin(math.radians(carAngle + currentAngle)))
 		for i in range(self.numRaycasts):
 			#move point until it hits the edge of the track
 			while not self.isOffTrack(self.point):
@@ -50,7 +49,7 @@ class Circuit(Sprite):
 			#save raycast in observation
 			observationPoints[i][0] = self.point.x
 			observationPoints[i][1] = self.point.y
-			observations[i] = math.sqrt((car.rigidbody.getPositions()[0] - self.point.x)**2 + (car.rigidbody.getPositions()[0] - self.point.y)**2)
+			observations[i] = math.sqrt((car.rigidbody.getPositions()[0] - self.point.x)**2 + (car.rigidbody.getPositions()[1] - self.point.y)**2)
 
 			#reset all the variable
 			currentAngle += self.angleBetweenRays
@@ -68,7 +67,6 @@ class Circuit(Sprite):
 
 		if not self.lastObs.any():
 			return
-
 		carCenterPos = (self.lastCar.rigidbody.getPositions()[0] + (self.lastCar.width / 2), self.lastCar.rigidbody.getPositions()[1] + (self.lastCar.height / 2))
 		for i in range(self.numRaycasts):
 			pygame.draw.line(window, (0, 0, 0), carCenterPos, self.lastObs[i])

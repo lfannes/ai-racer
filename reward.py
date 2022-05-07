@@ -25,8 +25,8 @@ class Reward():
             return True
         return False
 
-    def reset(self):
-        self.rewardIndex = 0
+    def reset(self, rewardIndex=0):
+        self.rewardIndex = rewardIndex
 
     def TrackEdgePos(self, startPos, circuit, angle):
         positions = []

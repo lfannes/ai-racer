@@ -1,8 +1,7 @@
 import os
-
-os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 import random
 import gym
+import time
 import numpy as np
 from collections import deque
 from keras.models import Model, load_model
@@ -30,7 +29,7 @@ def OurModel(input_shape, action_space):
     X = Dense(action_space, activation="linear", kernel_initializer='he_uniform')(X)
 
     model = Model(inputs=X_input, outputs=X, name='CartPole_DQN_model')
-    model.compile(loss="mse", optimizer=RMSprop(lr=0.0001, rho=0.95, epsilon=0.01), metrics=["accuracy"])
+    model.compile(loss="mse", optimizer=RMSprop(lr=0.01, rho=0.95, epsilon=0.01), metrics=["accuracy"])
 
     model.summary()
     return model
@@ -42,22 +41,20 @@ class DQNAgent:
         # by default, CartPole-v1 has max episode steps = 500
         self.state_size = self.env.n_observations
         self.action_size = self.env.n_actions
-        self.EPISODES = 20000
-        self.memory = deque(maxlen=8000)
-        self.name = "TEST1"
-        self.tensorboard = TensorBoard(log_dir=f"logs/{self.name}")
+        self.EPISODES = 2000
+        self.memory = deque(maxlen=1000)
+
         self.points_history = []
         self.mean_point_history = []
 
         self.gamma = 0.98  # discount rate
-        self.epsilon = 1 # exploration rate
+        self.epsilon = 1. # exploration rate
         self.epsilon_min = 0.01
-        self.epsilon_decay = 0.999
-        self.batch_size = 2000
+        self.epsilon_decay = 0.998
+        self.batch_size = 750
 
         # create main model
         self.model = OurModel(input_shape=(self.state_size,), action_space=self.action_size)
-        #self.model = load_model("cartpole-dqn-4000.h5")
 
     def remember(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
@@ -67,16 +64,18 @@ class DQNAgent:
             if self.epsilon > self.epsilon_min:
                 self.epsilon *= self.epsilon_decay
 
-    def act(self, state):
+    def get_action(self, state):
         if np.random.random() <= self.epsilon:
-            return self.env.getRandomAction()
+            return random.randint(0, 2)
         else:
-            return np.argmax(self.model(state, training=False).numpy())
+            act = np.argmax(self.model(state, training=False).numpy())
+            return act
 
 
     def replay(self):
         if len(self.memory) < self.batch_size:
             return
+        print("training")
         # Randomly sample minibatch from the memory
         minibatch = random.sample(self.memory, min(len(self.memory), self.batch_size))
 
@@ -110,7 +109,7 @@ class DQNAgent:
                 target[i][action[i]] = reward[i] + self.gamma * np.amax(target_next[i])
 
         # Train the Neural Network with batches
-        self.model.fit(state, target, batch_size=self.batch_size, verbose=0, callbacks=[self.tensorboard])
+        self.model.fit(state, target, batch_size=self.batch_size, verbose=0)
 
     def load(self, name):
         self.model = load_model(name)
@@ -127,9 +126,12 @@ class DQNAgent:
             epsReward = 0
             line = 0
             i = 0
+            start = time.perf_counter()
+            playTime = 0
+            trainTime = 0
             while not done:
                 #self.env.render()
-                action = self.act(state)
+                action = self.get_action(state)
                 next_state, reward, done, info = self.env.step(action)
                 next_state = np.reshape(next_state, [1, self.state_size])
                 epsReward += reward
@@ -140,12 +142,16 @@ class DQNAgent:
                 if done:
                     print("episode: {}/{}, score: {}, e: {}, line: {}".format(e, self.EPISODES, epsReward, self.epsilon, line))
                     self.points_history.append(epsReward)
-                    if epsReward >= 3000:
-                        self.save("3000")
-            if e % 40 == 0:
+                    if epsReward >= 1200:
+                        self.save("1200-7")
+            playTime = time.perf_counter() - start
+            if e % 50 == 0:
                 self.mean_point_history.append(np.mean(self.points_history))
                 self.points_history = []
+            start = time.perf_counter()
             self.replay()
+            trainTime = time.perf_counter() - start
+           #print(f"play: {playTime}, train: {trainTime}")
             self.reduce_eps()
 
     def test(self):
@@ -169,8 +175,8 @@ class DQNAgent:
 if __name__ == "__main__":
     agent = DQNAgent() 
     agent.run()
-    agent.save("final2")
+    agent.save("final-7")
     plt.plot([i for i in range(len(agent.mean_point_history))], agent.mean_point_history)
     plt.ylabel("points")
-    plt.xlabel("epochs")
+    plt.xlabel("epochs (x50)")
     plt.show()
